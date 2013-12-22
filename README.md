@@ -1,4 +1,4 @@
-APP
+Project
 ===
 
 Install
