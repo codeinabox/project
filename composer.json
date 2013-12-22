@@ -1,0 +1,11 @@
+{
+    "name": "anderson/app",
+    "description": "description_text",
+    "minimum-stability": "stable",
+    "authors": [
+        {
+            "name": "author's name",
+            "email": "email@example.com"
+        }
+    ]
+}
