@@ -1,0 +1,82 @@
+FROM ubuntu:12.04
+
+MAINTAINER Anderson Müller version: 1.0
+
+ENV DEBIAN_FRONTEND noninteractive
+
+# Update packages
+RUN echo "deb http://archive.ubuntu.com/ubuntu precise main universe" > /etc/apt/sources.list && \
+    echo "deb http://archive.ubuntu.com/ubuntu precise main restricted multiverse" >> /etc/apt/sources.list && \
+    echo "deb http://ppa.launchpad.net/ondrej/php5-oldstable/ubuntu precise main" >> /etc/apt/sources.list && \
+    apt-get update && \
+    apt-get upgrade -y
+
+# Prevent daemon start during install
+RUN echo '#!/bin/sh\nexit 101' > /usr/sbin/policy-rc.d && chmod +x /usr/sbin/policy-rc.d
+
+# Install Supervisord
+RUN apt-get install -y --force-yes \
+    supervisor && \
+    mkdir -p /var/log/supervisor
+
+# Install SSHD
+RUN apt-get install -y --force-yes \
+    openssh-server && \
+    mkdir /var/run/sshd && \
+    echo 'root:root' |chpasswd
+
+# Install GIT and CURL
+RUN apt-get install -y git curl
+
+# Install Apache
+RUN apt-get install -y --force-yes \
+    apache2-mpm-worker \
+    libapache2-mod-fastcgi
+
+# Install PHP and extensions
+RUN apt-get install -y --force-yes \
+    php5-fpm \
+    php5-cli \
+    php-apc \
+    php-pear \
+    php5-curl \
+    php5-intl \
+    php5-mcrypt \
+    php5-imagick \
+    php5-xsl
+
+# Setup Supervisor
+ADD ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Setup Apache
+RUN sed -i 's/AllowOverride None/AllowOverride All/' /etc/apache2/sites-available/default
+
+RUN a2enmod \
+    rewrite \
+    actions \
+    fastcgi \
+    alias \
+    vhost_alias
+
+#RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+ENV APACHE_RUN_USER www-data
+ENV APACHE_RUN_GROUP www-data
+ENV APACHE_LOG_DIR /var/log/apache2
+
+ADD ./php5-fcgi.conf /etc/apache2/conf.d/php5-fcgi.conf
+
+# Setup PHP
+RUN sed -i -e 's/^listen =.*/listen = \/var\/run\/php5-fpm.sock/' /etc/php5/fpm/pool.d/www.conf
+
+# Clean packages
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+ADD ./start.sh /usr/local/bin/start
+RUN chmod +x /usr/local/bin/start
+
+VOLUME ["/var/www"]
+
+EXPOSE 80 22
+
+CMD ["/usr/bin/supervisord"]

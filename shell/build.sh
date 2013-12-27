@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
-
-docker build -t vagrant/php54 /vagrant/docker/php54/.
+docker build -t amuller/base /vagrant/docker/base/.
+docker build -t amuller/mariadb /vagrant/docker/mariadb/.
+docker build -t amuller/php /vagrant/docker/php/.

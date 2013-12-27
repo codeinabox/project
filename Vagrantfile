@@ -20,9 +20,9 @@ Vagrant.configure("2") do |config|
   config.vm.provision :shell, :path => "shell/build.sh"
 
   config.vm.provision :docker do |docker|
-    docker.run "php54",
-      image: "vagrant/php54",
-      args: "-v /vagrant/www:/var/www -p 80:80"
+    docker.run "php",
+      image: "vagrant/php55",
+      args: "-d -v /vagrant/www:/var/www:rw -p 80:80 -p 2222:22"
   end
 
   config.ssh.username = "vagrant"
