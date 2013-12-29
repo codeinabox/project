@@ -10,23 +10,34 @@ RUN \
     apt-get upgrade -y ;\
 # END RUN
 
+# Make MariaDB happy with the docker environment
+RUN cat /proc/mounts > /etc/mtab
+
 # Install MariaDB
 RUN apt-get install \
-    mariadb-server
+    mariadb-server \
+    expect
 
 # Setup Supervisor
 ADD ./supervisord.conf /etc/supervisor/conf.d/mariadb.conf
 
 # Setup MariaDB
-RUN \
-    sed -i -e 's/^datadir\s*=.*/datadir = \/var\/data/' /etc/mysql/my.cnf ;\
-    sed -i -e 's/^bind-address/#bind-address/' /etc/mysql/my.cnf ;\
-    chmod a+w /tmp ;\
+ENV DB_PASS root
+# Add config
+ADD ./my.cnf /etc/mysql/my.cnf
+
+#RUN \
+#    sed -i -e 's/^bind-address/#bind-address/' /etc/mysql/my.cnf ;\
+#    chmod a+w /tmp ;\
 # END RUN
+
+ADD ./secure.sh /usr/bin/mariadb-secure
+ADD ./password.sh /usr/bin/mariadb-password
+ADD ./start.sh /usr/bin/mariadb-start
 
 # Clean packages
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-VOLUME ["/var/data"]
+VOLUME ["/var/lib/mysql"]
 
 EXPOSE 3306

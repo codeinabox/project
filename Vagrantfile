@@ -15,14 +15,22 @@ Vagrant.configure("2") do |config|
     virtualbox.customize ["setextradata", :id, "--VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root", "1"]
   end
 
-  config.vm.provision :docker, images: ["ubuntu:12.04"]
+  config.vm.provision :docker, images: ["ubuntu:12.04", "shipyard/shipyard"]
 
   config.vm.provision :shell, :path => "shell/build.sh"
 
   config.vm.provision :docker do |docker|
+    docker.run "shipyard",
+      image: "shipyard/shipyard",
+      args: "-p 8000:8000"
+
+    docker.run "mariadb",
+      image: "amuller/mariadb",
+      args: "-name mariadb -p 221:22 -p 3306:3306 -v /vagrant/data:/var/lib/mysql"
+
     docker.run "php",
-      image: "vagrant/php55",
-      args: "-d -v /vagrant/www:/var/www:rw -p 80:80 -p 2222:22"
+      image: "amuller/php",
+      args: "-name php -p 222:22 -p 80:80 -v /vagrant/www:/var/www -link mariadb:db"
   end
 
   config.ssh.username = "vagrant"
