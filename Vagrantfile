@@ -15,7 +15,7 @@ Vagrant.configure("2") do |config|
     virtualbox.customize ["setextradata", :id, "--VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root", "1"]
   end
 
-  config.vm.provision :docker, images: ["ubuntu:12.04", "shipyard/shipyard"]
+  config.vm.provision :docker, images: ["ubuntu:12.04", "shipyard/shipyard:latest"]
 
   config.vm.provision :shell, :path => "shell/build.sh"
 
